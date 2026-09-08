@@ -1,0 +1,12 @@
+services:
+  retrain:
+    image: msml-ci-training:local
+    build: .
+    user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
+    environment:
+      MLFLOW_TRACKING_URI: file:///workspace/mlruns
+      OUTPUT_DIR: /workspace/output
+      SOURCE_COMMIT: ${SOURCE_COMMIT:-local-preflight}
+      HOME: /tmp
+    volumes:
+      - .:/workspace

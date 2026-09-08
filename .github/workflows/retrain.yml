@@ -1,0 +1,81 @@
+name: Retrain and build MLflow model
+on:
+  push:
+    branches: [main]
+    paths: ['MLProject/**', 'Dockerfile', 'scripts/**', '.github/workflows/retrain.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: msml-model-publication
+  cancel-in-progress: false
+jobs:
+  retrain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      IMAGE_NAME: msml-security-ci
+      DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v6
+      - name: Build training environment
+        run: docker build -t msml-ci-training:local .
+      - name: Execute MLflow Project in Docker
+        run: |
+          mkdir -p output mlruns
+          docker run --rm --user "$(id -u):$(id -g)" \
+            -e HOME=/tmp -e MLFLOW_TRACKING_URI=file:///workspace/mlruns \
+            -e OUTPUT_DIR=/workspace/output -e SOURCE_COMMIT="$GITHUB_SHA" \
+            -e GITHUB_RUN_ID="$GITHUB_RUN_ID" \
+            -v "$PWD:/workspace" msml-ci-training:local
+      - name: Verify exported model and data lineage
+        run: docker run --rm -v "$PWD:/workspace" msml-ci-training:local python scripts/verify_artifact.py output
+      - name: Persist model in this repository
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python scripts/persist_artifact.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ci-model-${{ github.sha }}
+          path: output/
+          if-no-files-found: error
+          retention-days: 30
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.7'
+      - name: Install MLflow image builder
+        run: pip install mlflow==2.19.0
+      - name: Build serving image with required MLflow command
+        run: mlflow models build-docker --model-uri output/model --name "$IMAGE_NAME:$GITHUB_SHA" --env-manager local
+      - name: Verify image inference
+        run: |
+          docker run -d --name msml-ci-serving -p 127.0.0.1:8000:8080 "$IMAGE_NAME:$GITHUB_SHA"
+          python scripts/inference.py --artifact output --output image-serving-proof.json
+          docker logs msml-ci-serving > image-serving.log 2>&1
+      - name: Push verified image to Docker Hub
+        if: env.DOCKERHUB_USERNAME != '' && env.DOCKERHUB_TOKEN != ''
+        run: |
+          printf '%s' "$DOCKERHUB_TOKEN" | docker login --username "$DOCKERHUB_USERNAME" --password-stdin
+          TARGET="$DOCKERHUB_USERNAME/msml-security:$GITHUB_SHA"
+          docker tag "$IMAGE_NAME:$GITHUB_SHA" "$TARGET"
+          docker push "$TARGET"
+          docker inspect --format '{{json .RepoDigests}}' "$TARGET" > image-digests.json
+          printf 'https://hub.docker.com/r/%s/msml-security\n' "$DOCKERHUB_USERNAME" > DockerHub.txt
+      - name: Record missing registry access
+        if: env.DOCKERHUB_USERNAME == '' || env.DOCKERHUB_TOKEN == ''
+        run: printf 'Image built and tested; Docker Hub publication remains incomplete until DOCKERHUB_USERNAME variable and DOCKERHUB_TOKEN secret are configured.\n' > dockerhub-pending.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: image-verification-${{ github.sha }}
+          path: |
+            image-serving-proof.json
+            image-serving.log
+            image-digests.json
+            DockerHub.txt
+            dockerhub-pending.txt
+          if-no-files-found: warn
+      - name: Clean up serving container
+        if: always()
+        run: docker rm -f msml-ci-serving || true
