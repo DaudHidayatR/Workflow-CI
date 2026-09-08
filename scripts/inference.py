@@ -19,7 +19,7 @@ def main():
         try:
             with urlopen(args.url+'/ping', timeout=2) as response:
                 if response.status == 200: break
-        except (URLError, TimeoutError):
+        except (URLError, OSError):
             if attempt == 59: raise
             time.sleep(1)
     started = time.perf_counter()
