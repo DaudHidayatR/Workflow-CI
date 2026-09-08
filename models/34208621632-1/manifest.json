@@ -1,0 +1,30 @@
+{
+  "data_sha256": "e221ea9e118cdac6d7dabf085a224f42b6cde800a71c446f71c2dec609a2c233",
+  "files": {
+    "inference_fixture.json": "50ea5a99e84c7e8151fc6f5ec721bc3809e5d0e250af00d44dfe83aba3d1cd4d",
+    "model/MLmodel": "74ee109724ea8a2a2becb3e062efb64b1a691db9617a6a6bbd33d3e1019e4465",
+    "model/conda.yaml": "217fba84c872ac8a70766251e5ec8ca2579fe479171512002c391c20f1286dea",
+    "model/model.pkl": "dfa81503a699768d06ad22d6b8e83f5448ef36ddcc9438e3829496e152a7b49d",
+    "model/python_env.yaml": "434c252fa8c47ff388ff8316a444d8ac98d832bef9bff038e14a4e4effe08b87",
+    "model/requirements.txt": "0a03c38bf1e7bce5168a92c9b4a554612bdfb9f03dbc8ff45f232d171413d0c1",
+    "processed_manifest.json": "a9cb33fdf39cbb3a767a51f700388c8b206ffc864c3c01d4ceb5dc8ae6c920ea"
+  },
+  "github_run_id": "34208621632",
+  "metrics": {
+    "holdout_accuracy": 0.9547916666666667,
+    "holdout_macro_f1": 0.9565126770974182,
+    "holdout_macro_precision": 0.9596129835732925,
+    "holdout_macro_recall": 0.9553479024854961,
+    "holdout_weighted_f1": 0.9551392169671067,
+    "training_accuracy_score": 0.9986458333333333,
+    "training_f1_score": 0.998646165105585,
+    "training_precision_score": 0.9986468538435624,
+    "training_recall_score": 0.9986458333333333,
+    "training_score": 0.9986458333333333
+  },
+  "pyfunc_roundtrip": "pass",
+  "run_id": "e8258967cf5343caab7108de179416dc",
+  "selected_C": 2.0,
+  "source_commit": "cd960e17ca00421606d54c76b0e64446b4d6233f",
+  "status": "FINISHED"
+}
