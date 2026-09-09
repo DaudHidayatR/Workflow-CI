@@ -1,0 +1,5 @@
+https://hub.docker.com/r/daudhidayatr/msml-security
+
+Image: daudhidayatr/msml-security:5217c2051eea36fbd8828416684fd058adbac1db
+Digest: sha256:e2e5162bb359ae497137ebd517d505f0219f93f09da81db9b7617bba51181eb7
+Successful CI: https://github.com/DaudHidayatR/Workflow-CI/actions/runs/34302555982
