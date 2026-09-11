@@ -3,3 +3,6 @@ output
 mlruns
 **/mlruns
 **/__pycache__
+
+# Generated from the submission-named descriptor when training starts.
+MLProject/MLproject

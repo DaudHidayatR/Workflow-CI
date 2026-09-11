@@ -9,7 +9,7 @@ docker compose build retrain
 docker compose run --rm retrain
 ```
 
-On the author's rootless Podman workstation, prefix with `LOCAL_UID=0 LOCAL_GID=0`. Use a fresh output directory for each retraining; existing output/model is deliberately rejected. The container runs `mlflow run MLProject --env-manager local`, so the project's entry point executes inside the pinned Docker environment. `MLProject/conda.yaml` is retained for rubric compatibility; `MLProject/MLproject` is MLflow's case-sensitive executable descriptor, and `MLProject/MLProject` is an identical rubric-named copy.
+On the author's rootless Podman workstation, prefix with `LOCAL_UID=0 LOCAL_GID=0`. Use a fresh output directory for each retraining; existing output/model is deliberately rejected. The container starts `scripts/run_project.py`, which generates MLflow's executable `MLProject/MLproject` from the single tracked source `MLProject/MLProject`, then runs `mlflow run MLProject --env-manager local`. The generated file is ignored by Git and Docker; edit only `MLProject/MLProject`. This preserves the submission's spelling without maintaining case-only duplicate files in Git. On case-insensitive filesystems the source already resolves under MLflow's spelling. `conda.yaml` remains the optional Conda environment; Docker installs `requirements.txt`.
 
 ## CI and durable artifact retrieval
 

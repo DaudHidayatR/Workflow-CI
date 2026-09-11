@@ -3,3 +3,6 @@ mlruns/
 __pycache__/
 *.pyc
 .env
+
+# Generated from the submission-named descriptor when training starts.
+MLProject/MLproject

@@ -6,4 +6,4 @@ WORKDIR /workspace
 COPY MLProject/requirements.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir -r /tmp/requirements.txt && pip check
 COPY . .
-CMD ["mlflow", "run", "MLProject", "--env-manager", "local", "--experiment-name", "MSML_DaudHidayatRamadhan"]
+CMD ["python", "scripts/run_project.py"]
