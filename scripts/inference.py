@@ -8,6 +8,20 @@ from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
 
 
+def wait_ready(url, attempts=60, interval=1):
+    """Wait for HTTP 200, otherwise fail after a bounded number of probes."""
+    for attempt in range(attempts):
+        try:
+            with urlopen(url + "/ping", timeout=2) as response:
+                if response.status == 200:
+                    return
+        except (URLError, OSError):
+            pass
+        if attempt + 1 < attempts:
+            time.sleep(interval)
+    raise TimeoutError(f"Model did not become ready after {attempts} probes: {url}")
+
+
 def main():
     """Check endpoint predictions against the CI fixture and save HTTP verification evidence."""
     parser = argparse.ArgumentParser()
@@ -17,15 +31,7 @@ def main():
     args = parser.parse_args()
     fixture = json.loads((args.artifact / "inference_fixture.json").read_text())
     manifest = json.loads((args.artifact / "manifest.json").read_text())
-    for attempt in range(60):
-        try:
-            with urlopen(args.url + "/ping", timeout=2) as response:
-                if response.status == 200:
-                    break
-        except (URLError, OSError):
-            if attempt == 59:
-                raise
-            time.sleep(1)
+    wait_ready(args.url)
     started = time.perf_counter()
     request = Request(
         args.url + "/invocations",
@@ -34,9 +40,8 @@ def main():
     )
     with urlopen(request, timeout=60) as response:
         result = json.load(response)
-    assert (
-        result["predictions"] == fixture["expected"]
-    ), "HTTP / CI model predictions differ"
+    if not (result["predictions"] == fixture["expected"]):
+        raise AssertionError("HTTP / CI model predictions differ")
     bad = Request(
         args.url + "/invocations",
         data=b'{"dataframe_records":[{"wrong_column":"example"}]}',
@@ -45,7 +50,8 @@ def main():
     try:
         urlopen(bad, timeout=10)
     except HTTPError as error:
-        assert error.code == 400, error.code
+        if not (error.code == 400):
+            raise AssertionError(error.code)
         rejected = error.code
     else:
         raise AssertionError("Missing Sentence column was accepted")

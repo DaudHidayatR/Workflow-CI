@@ -37,42 +37,31 @@ def load_data():
 
 
 def make_model(c=1.0):
-    """Build an unfitted text pipeline; feature fitting stays inside each training fold."""
-    return Pipeline(
-        [
-            (
-                "features",
-                ColumnTransformer(
-                    [
-                        (
-                            "text",
-                            TfidfVectorizer(
-                                analyzer="char",
-                                ngram_range=(3, 4),
-                                max_features=20000,
-                                min_df=2,
-                                dtype=np.float32,
-                                lowercase=False,
-                            ),
-                            "Sentence",
-                        )
-                    ],
-                    sparse_threshold=1.0,
-                ),
-            ),
-            ("classifier", LinearSVC(C=c, dual="auto", max_iter=5000, random_state=42)),
-        ]
+    """Build an unfitted pipeline; each training fold fits its own text features."""
+    vectorizer = TfidfVectorizer(
+        analyzer="char",
+        ngram_range=(3, 4),
+        max_features=20000,
+        min_df=2,
+        dtype=np.float32,
+        lowercase=False,
     )
+    features = ColumnTransformer(
+        [("text", vectorizer, "Sentence")], sparse_threshold=1.0
+    )
+    classifier = LinearSVC(C=c, dual="auto", max_iter=5000, random_state=42)
+    return Pipeline([("features", features), ("classifier", classifier)])
 
 
 def scores(truth, prediction, prefix, training=False):
     """Return weighted training metrics or explicitly named holdout metrics for logging parity."""
     from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
+    accuracy = float(accuracy_score(truth, prediction))
     if training:
         return {
-            "training_accuracy_score": float(accuracy_score(truth, prediction)),
-            "training_score": float(accuracy_score(truth, prediction)),
+            "training_accuracy_score": accuracy,
+            "training_score": accuracy,
             "training_precision_score": float(
                 precision_score(truth, prediction, average="weighted", zero_division=0)
             ),
@@ -84,7 +73,7 @@ def scores(truth, prediction, prefix, training=False):
             ),
         }
     return {
-        prefix + "accuracy": float(accuracy_score(truth, prediction)),
+        prefix + "accuracy": accuracy,
         prefix
         + "macro_precision": float(
             precision_score(truth, prediction, average="macro", zero_division=0)

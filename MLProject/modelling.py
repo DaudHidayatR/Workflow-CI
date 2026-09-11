@@ -55,16 +55,22 @@ def main():
     expected = model.predict(sample).tolist()
     generic = mlflow.pyfunc.load_model(str(model_dir))
     actual = generic.predict(sample).tolist()
-    assert (
-        len(actual) == 32 and actual == expected
-    ), "Exported model prediction mismatch"
-    assert np.array_equal(
-        mlflow.sklearn.load_model(str(model_dir)).predict(sample), expected
-    )
+    if not (len(actual) == 32 and actual == expected):
+        raise AssertionError("Exported model prediction mismatch")
+    if not (
+        np.array_equal(
+            mlflow.sklearn.load_model(str(model_dir)).predict(sample), expected
+        )
+    ):
+        raise AssertionError(
+            "Verification failed: np.array_equal(mlflow.sklearn.load_model(str(model_dir)).predict(sample), expected)"
+        )
     run = mlflow.get_run(run_id)
-    assert run.info.status == "FINISHED"
+    if not (run.info.status == "FINISHED"):
+        raise AssertionError("Verification failed: run.info.status == 'FINISHED'")
     for key, value in metrics.items():
-        assert np.isclose(run.data.metrics[key], value), key
+        if not (np.isclose(run.data.metrics[key], value)):
+            raise AssertionError(key)
     (output / "inference_fixture.json").write_text(
         json.dumps(
             {"dataframe_split": sample.to_dict(orient="split"), "expected": expected},
