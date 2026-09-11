@@ -1,0 +1,37 @@
+{
+  "clean_class_counts": {
+    "CommandInjection": 48014,
+    "Normal": 53750,
+    "SQLInjection": 57278,
+    "XSS": 40748
+  },
+  "clean_unique_rows": 199790,
+  "conflicting_groups": 3,
+  "conflicting_rows": 8,
+  "feature_boundary": "clean text+target; fit TF-IDF only on each training/CV fold",
+  "files": {
+    "test.csv.gz": "8275add91319c49979bbc7cc4f6b931b73127054ba3b1ab204759cd5335f9ad6",
+    "train.csv.gz": "205952a704438c280a9f775a5d4bb7f97b92893bea65d141441b132c91f71139"
+  },
+  "invalid_or_empty_rows": 616,
+  "policy_version": 1,
+  "raw_rows": 206636,
+  "raw_sha256": "e221ea9e118cdac6d7dabf085a224f42b6cde800a71c446f71c2dec609a2c233",
+  "sample_size": 24000,
+  "seed": 42,
+  "subset_excluded_rows": 175790,
+  "test_class_counts": {
+    "CommandInjection": 1154,
+    "Normal": 1291,
+    "SQLInjection": 1376,
+    "XSS": 979
+  },
+  "test_rows": 4800,
+  "train_class_counts": {
+    "CommandInjection": 4614,
+    "Normal": 5166,
+    "SQLInjection": 5504,
+    "XSS": 3916
+  },
+  "train_rows": 19200
+}
